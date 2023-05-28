@@ -1,30 +1,24 @@
-from typing import List, Optional, Type
 import enum
+from typing import List
 
 from sqlalchemy import (
     Boolean,
-    Column,
     Date,
-    Integer,
     Float,
-    SmallInteger,
     MetaData,
     String,
-    Table,
     Text,
     ForeignKey,
     Enum,
-    desc,
-    func
 )
-from sqlalchemy.sql import select
-from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
 from sqlalchemy.orm import Mapped, mapped_column, relationship, selectinload
 
-from db import async_session
+from pytils.translit import slugify
+
 from models.base import Base
 from models.user import User
+from schemas.channel import CreateActivitie
 
 metadata = MetaData()
 
@@ -42,6 +36,32 @@ class Activity(Base):
     __tablename__ = 'cataloging_activity'
 
     title: Mapped[str] = mapped_column('title', String(64), nullable=False)
+    slug: Mapped[str] = mapped_column('slug', String(50), nullable=False)
+
+    @classmethod
+    async def create(cls, data: CreateActivitie):
+        _data = data.dict()
+        _data['slug'] = slugify(data.title)
+        slug = slugify(data.title)
+        activitie = Activity(**_data)
+        async with cls.async_session as session:
+            session.add(activitie)
+            await session.commit()
+            new = await cls.get(activitie.id)
+            if not new:
+                raise RuntimeError()
+            return new
+
+    @classmethod
+    async def update(cls, id: int, data: CreateActivitie):
+        data = data.dict()
+        if isinstance(id, int):
+            stmt = update(cls).where(cls.id==id).values(title=data['title'])
+        async with cls.async_session as session:
+            await session.execute(stmt)
+            await session.commit()
+            res = await cls.get(id)
+            return res
 
 
 class ChannelState(str, enum.Enum):
@@ -78,7 +98,7 @@ class Channel(Base):
     async def all(cls, skip: int, limit: int):
         stmt = select(cls).options(selectinload(cls.owner))
         stmt = stmt.offset(skip).limit(limit)
-        async with async_session() as session:
+        async with cls.async_session as session:
             res = await session.execute(stmt)
             return res.scalars()
 
@@ -96,6 +116,6 @@ class Channel(Base):
         if isinstance(value, str):
             stmt = select(cls).options(selectinload(cls.owner)).where(cls.slug==value)
 
-        async with async_session() as session:
+        async with cls.async_session as session:
             res = await session.execute(stmt)
             return res.one_or_none()

@@ -2,7 +2,7 @@ from jose import JWTError, jwt
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from schemas.user import UserOut, TokenData, AnonymousUser
+from schemas.user import UserOut, TokenData
 from models.user import User
 from exceptions import credentials_exception
 

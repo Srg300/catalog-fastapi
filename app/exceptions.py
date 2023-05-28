@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 
 
 credentials_exception = HTTPException(
@@ -25,11 +25,16 @@ content_unit_404 = HTTPException(
 )
 
 channel_acces = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
+    status_code=status.HTTP_403_FORBIDDEN,
     detail="No channel access",
 )
 
 channel_404 = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
     detail="Channel not found",
+)
+
+not_found_404 = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Not found",
 )

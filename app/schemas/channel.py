@@ -1,9 +1,9 @@
 from datetime import date
-from typing import Optional, List, Any
+from typing import Optional, List
 from enum import Enum
 
 from pydantic import BaseModel
-from .user import UserInfoForChannel, UserOut
+from .user import UserInfoForChannel
 
 
 class ChannelSort(str, Enum):
@@ -11,9 +11,17 @@ class ChannelSort(str, Enum):
     random = "random"
 
 
+class CreateActivitie(BaseModel):
+    title: str
+    # slug: str
+
+    # class Config:
+    #     orm_mode = True
 
 class Activitie(BaseModel):
+    id: int
     title: str
+    slug: str
 
     class Config:
         orm_mode = True
